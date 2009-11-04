@@ -10,8 +10,7 @@ window.onload = function() {
 	
 	var dimensions = [250, 250];
 	var dimensionsSVG = dimensions[0]+' '+dimensions[1]+'';
-	
-		
+
 	//data
 	var theremin = [1.,1.,0.25,0.25,0.1,0.1,1.];
 	var lightningDrum = [0.5,0.66,0.375,0.25,0.1,0.1,1.];
@@ -29,83 +28,30 @@ window.onload = function() {
 
 	
 	var axis = '';
-	
 	var cButtoncoord = 50;
-    
 	
 	//draw the control circles.
 	for (var i = 0; i<data.length; i++){
-		controlButtons.push(paper.circle(50,cButtoncoord,10).attr({fill: colours[i], opacity: '0.5'}))
+		var scratch = paper.circle(50,cButtoncoord,10).attr({fill: colours[i], opacity: '0.5'});
+		scratch.id = i;
+		scratch.show = false;
+		controlButtons.push(scratch)
 		paper.text(90,cButtoncoord,names[i]).attr({fill: colours[i]});
 		cButtoncoord+=20;
 	}
-		
-		var shown = [false, false, false, false, false];	//is the corresponding graph displayed or not. 
-    		controlButtons[0].click(function(){
-			if (shown[0] == false){
-				this.attr({opacity: 0.75});
-				graphs[0].show();
-				shown[0] = true;
+	
+	controlButtons.click(function(){
+		if (this.show == false){
+			this.attr({opacity: 0.75});
+			graphs[this.id].show();
+			this.show = true;
 			}
-			else{
-				this.attr({opacity: 0.5});
-				graphs[0].hide();
-				shown[0]=false;
-			}
-			});
-		controlButtons[1].click(function(){
-			if (shown[1] == false){
-				this.attr({opacity: 0.75});
-				graphs[1].show();
-				graphs[1].insertBefore(graphs[data.length]);
-				shown[1] = true;
-			}
-			else{
-				this.attr({opacity: 0.5});
-				graphs[1].hide();
-				shown[1]=false;
-			}
-			});
-    		controlButtons[2].click(function(){
-			if (shown[2] == false){
-				this.attr({opacity: 0.75});
-				graphs[2].show();
-				graphs[2].insertBefore(graphs[data.length]);
-				shown[2] = true;
-			}
-			else{
-				this.attr({opacity: 0.5});
-				graphs[2].hide();
-				shown[2]=false;
-			}
-			});
-    		controlButtons[3].click(function(){
-			if (shown[3] == false){
-				this.attr({opacity: 0.75});
-				graphs[3].show();
-				graphs[3].insertBefore(graphs[data.length]);
-				shown[3] = true;
-			}
-			else{
-				this.attr({opacity: 0.5});
-				graphs[3].hide();
-				shown[3]=false;
-			}
-			});
-    		controlButtons[4].click(function(){
-			if (shown[4] == false){
-				this.attr({opacity: 0.75});
-				graphs[4].show();
-				graphs[4].insertBefore(graphs[data.length]);
-				shown[4] = true;
-			}
-			else{
-				this.attr({opacity: 0.5});
-				graphs[4].hide();
-				shown[4]=false;
-			}
-			});
-
+		else{
+			this.attr({opacity: 0.5});
+			graphs[this.id].hide();
+			this.show=false;
+		}
+	})
 
 	function grapher(){
 		//Graph all the graphs, then hide them. 
@@ -140,20 +86,9 @@ window.onload = function() {
 		graphs.hide();
 		//Draw axis
 		graphs.push(paper.path(axis).attr({stroke:'#796d5f', 'stroke-width': 1.5, translation: dimensionsSVG}));
-	
-		//Some fun.	
-		//graphs.mouseover(function(){
-		//	graphs.animate({rotation: (rot+=60)+' ' + '250 250'}, 1000, 'bounce')
-		//	});
-		
-		//This brings the clicked graph to the front. 
-		for (var i=0; i<data.length;i++){
-			graphs[i].click(function(){
-			//Bring graphs forwards
-			this.insertBefore(graphs[data.length]);	//the axis is always added last.
-			//this.hide();
-			})
-		}	
+		//Bring the clicked graph to the front. 
+		graphs.click(function(){this.insertBefore(graphs[data.length]);	//the axis is always added last.
+		})
 	};//grapher()
 	grapher();
 
