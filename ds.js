@@ -91,5 +91,20 @@ window.onload = function() {
 		})
 	};//grapher()
 	grapher();
+	var info = loadData("instruments.csv");
+	paper.text(250, 250, info).attr({fill: colours[1]});
+}
+function loadData(file){
+	if (window.XMLHttpRequest)
+	{
+		xhttp=new XMLHttpRequest();
+	}
+	else // Internet Explorer 5/6
+	{
+		xhttp=new ActiveXObject("Microsoft.XMLHTTP");
+	}
+	xhttp.open("GET",file,false);
+	xhttp.send("");
+	return xhttp.responseText; 
 
 }
