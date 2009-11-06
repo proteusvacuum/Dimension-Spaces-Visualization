@@ -6,54 +6,56 @@
 //Read from the csv file. should have axis labels as the first line. 
 
 window.onload = function() {
-       var paper = new Raphael(document.getElementById('canvas_container'), 500, 500);
+      var paper = new Raphael(document.getElementById('canvas_container'), 500, 500);
 	
 var nAxis = 7;
 var nData = 5;
 var dimensions = [250, 250];
 var dimensionsSVG = dimensions[0]+' '+dimensions[1]+'';
-       //data
+      //data
 	var theremin = [1.,1.,0.25,0.25,0.1,0.1,1.];
 	var lightningDrum = [0.5,0.66,0.375,0.25,0.1,0.1,1.];
 	var test1 = [0.1,0.8,1.,0.66,0.25,0.25,0.1];
 	var test2 = [0.3,1.,0.1,0.8,1.,0.66,0.25];
 	var test3 = [0.1,0.9,0.1,0.9,0.1,0.9,0.5];
 
-	var data = [theremin, lightningDrum, test1, test2,test3];
-	var names = ['Theremin', 'Lightning Drum', 'Test 1', 'Test 2', 'Test 3'];
-       
-//        var data = CSVToArray(loadData("instruments.csv"));
-//        var names;
-//        for (var i=1; i<data.length; i++) {names = data[i][0];}
-       var colours = ['#3b14e0', '#7c9a2d', '#e89430','#744dd9', '#4fc3e0','#599123'];
+// 	var data = [theremin, lightningDrum, test1, test2,test3];
+// 	var names = ['Theremin', 'Lightning Drum', 'Test 1', 'Test 2', 'Test 3'];
+	var colours = ['#3b14e0', '#7c9a2d', '#e89430','#744dd9', '#4fc3e0','#599123'];
+	var names = new Array();
+	var data = new Array();
+	
+	var inputFile = CSVToArray(loadData("instruments.csv"));
+      
+      
+      
 	
 	//Group of elements
 	var graphs = paper.set();
 	var controlButtons = paper.set();
-
 	var cButtoncoord = 50;
 //******************************************************************************************************
 //					FUNCTION DECLARATIONS
 //******************************************************************************************************
 function graph(toGraph, controlID){
-       //for(var i=0; i<toGraph.length; j++){
+      //for(var i=0; i<toGraph.length; j++){
 	      var firstPoint = '';
 	      var point = '';
 	      var datum = toGraph;
 	      
 	      for(var j = 0; j<datum.length; j++){
-		     var nextCoordx = (dimensions[0]* Math.sin(2*Math.PI*j/nAxis));
-		     var nextCoordy = (dimensions[1]* Math.cos(2*Math.PI*j/nAxis));
-		     //plot points.
-		     var pointx = datum[j]*nextCoordx+'';
-		     var pointy = datum[j]*nextCoordy+'';
-		     nextCoordx = nextCoordx+''
-		     nextCoordy = nextCoordy+''
-		     if (j==0) //grab the first data point to close the loop. 
+		    var nextCoordx = (dimensions[0]* Math.sin(2*Math.PI*j/nAxis));
+		    var nextCoordy = (dimensions[1]* Math.cos(2*Math.PI*j/nAxis));
+		    //plot points.
+		    var pointx = datum[j]*nextCoordx+'';
+		    var pointy = datum[j]*nextCoordy+'';
+		    nextCoordx = nextCoordx+''
+		    nextCoordy = nextCoordy+''
+		    if (j==0) //grab the first data point to close the loop. 
 			    {firstPoint = pointx + ' ' + pointy;}
-		     else{
-		     point = point + 'L' + pointx + ' '+ pointy;}
-		     
+		    else{
+		    point = point + 'L' + pointx + ' '+ pointy;}
+		    
 	      }
 	      point = 'M'+firstPoint + point + 'z';//'L' + firstPoint;
 	      var aNewGraph = paper.path(point).attr({fill:Raphael.getColor(), translation:dimensionsSVG , stroke: '#ddd', 'stroke-width': 8, opacity: 0.5});
@@ -63,34 +65,46 @@ function graph(toGraph, controlID){
 	      });	
 }
 function drawAxis(){
-       var axis = '';
-       for (var i=0; i<nAxis; i++){
+      var axis = '';
+      for (var i=0; i<nAxis; i++){
 	      var nextCoordx = (dimensions[0]* Math.sin(2*Math.PI*i/nAxis));
 	      var nextCoordy = (dimensions[1]* Math.cos(2*Math.PI*i/nAxis));
 	      nextCoordx = nextCoordx+'';
 	      nextCoordy = nextCoordy+'';
 	      axis = axis + 'M 0 0 l' + nextCoordx + ' '+ nextCoordy;
-       }
-       graphs.push(paper.path(axis).attr({stroke:'#796d5f', 'stroke-width': 1.5, translation: dimensionsSVG}));
+      }
+      graphs.push(paper.path(axis).attr({stroke:'#796d5f', 'stroke-width': 1.5, translation: dimensionsSVG}));
 }
 function hideGraph(indexToHide){
-       for (var i=1;i<graphs.length;i++)
-       {
+      for (var i=1;i<graphs.length;i++)
+      {
 	      if (graphs[i].id == indexToHide)
-		     graphs[i].hide();
-       }
+		    graphs[i].hide();
+      }
 }
 function showGraph(indexToShow){
-       for (var i=1;i<graphs.length;i++)
-       {
+      for (var i=1;i<graphs.length;i++)
+      {
 	      if (graphs[i].id == indexToShow)
-		     graphs[i].show();
-       }
+		    graphs[i].show();
+      }
 }
 //******************************************************************************************************
 //					END FUNCTION DECLARATIONS
 //******************************************************************************************************
-
+//Fill Names array
+      for (var i=1; i<inputFile.length; i++) {names[i] = inputFile[i][0];
+	 //paper.text(400,280+10*i,names[i]).attr({fill: colours[i]});
+	 }
+//Fill data array
+	for (var i=1; i<inputFile.length; i++){
+	var dataScratch= new Array();
+	    for (var j=1; j<4; j++){
+		  dataScratch[j] = inputFile[i][j];
+	    }
+	    data[i] = dataScratch;
+	   // paper.text(400,280+10*i,data[i][1]).attr({fill: colours[i]});
+	}
 
 //draw the control circles.
 	for (var i = 0; i<data.length; i++){
@@ -111,18 +125,18 @@ function showGraph(indexToShow){
 			    this.attr({opacity: 0.75});   
 		}
 		else{
-		     if (this.show == false){
+		    if (this.show == false){
 			    this.attr({opacity: 0.75});
 			    //graphs[this.id].show();
 			    showGraph(this.id);
 			    this.show = true;
 			    }
-		     else{
+		    else{
 			    this.attr({opacity: 0.5});
 			    hideGraph(this.id);
 			    //graphs[this.id].hide();
 			    this.show=false;
-		     }
+		    }
 		}
 	})
 	drawAxis();
