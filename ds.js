@@ -2,8 +2,7 @@
 //farid.rener@mail.mcgill.ca
 //MUMT 502
 
-//TODO: Fix colours: Fill array with Raphael.getColor() for the length of data.length
-//Read from the csv file. should have axis labels as the first line. 
+//TODO: Figure out a new way of displaying the list. Display name of graph on mouseover. 
 
 window.onload = function() {
       var paper = new Raphael(document.getElementById('canvas_container'), 1000, 5000);
