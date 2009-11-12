@@ -5,7 +5,7 @@
 //TODO: Figure out a new way of displaying the list. Display name of graph on mouseover. 
 
 window.onload = function() {
-      var paper = new Raphael(document.getElementById('canvas_container'), 1000, 5000);
+      var paper = new Raphael(document.getElementById('canvas_container'), 1000, 1000);
 	
 
 var dimensions = [250, 250];
@@ -19,10 +19,11 @@ var dimensionsSVG = dimensions[0]+' '+dimensions[1]+'';
 
 // 	var data = [theremin, lightningDrum, test1, test2,test3];
 // 	var names = ['Theremin', 'Lightning Drum', 'Test 1', 'Test 2', 'Test 3'];
-	var colours = ['#3b14e0', '#7c9a2d', '#e89430','#744dd9', '#4fc3e0','#599123'];
+	var colours = new Array();
 	var names = new Array();
 	var axisnames = new Array();
 	var data = new Array();
+	var userInput = new Array(-1,-1,-1);
 	
 	var csv = loadData("instruments.csv");
 	var inputFile = CSVToArray(csv);
@@ -32,6 +33,8 @@ var dimensionsSVG = dimensions[0]+' '+dimensions[1]+'';
 	//Group of elements
 	var graphs = paper.set();
 	var controlButtons = paper.set();
+	var ticks = paper.set();
+	
 	var cButtoncoord = 50;
 //******************************************************************************************************
 //					FUNCTION DECLARATIONS
@@ -62,6 +65,22 @@ function graph(toGraph, controlID){
 	      graphs.click(function(){this.insertBefore(graphs[0])
 	      });	
 }
+function drawTicks(){
+	// There are 5 ticks per axis + origin... which we will ignore for now. 
+	var scratch
+	for(var j = 0; j<nAxis; j++){
+	    var nextCoordx = (dimensions[0]* Math.sin(2*Math.PI*j/nAxis));
+	    var nextCoordy = (dimensions[1]* Math.cos(2*Math.PI*j/nAxis));
+		for(var i=1; i<6; i++){
+			scratch = paper.circle(nextCoordx*i/5,nextCoordy*i/5,4).attr({fill: '#ddd', opacity: '0.5', translation: dimensionsSVG});
+			scratch.axis = j;	//the axis the tick is on
+			scratch.coord = i;	//the coordinate point
+			ticks.push(scratch);
+		}
+
+	}
+}
+
 function drawAxis(){
       var axis = '';
       for (var i=0; i<nAxis; i++){
@@ -112,7 +131,7 @@ for (var i=1; i<inputFile.length; i++) {colours[i] = Raphael.getColor();}
 	}
 
 //draw the control circles.
-	for (var i = 1; i<inputFile.length; i++){
+	for (var i = 1; i<inputFile.length-1; i++){
 		var scratch = paper.circle(900,cButtoncoord,10).attr({fill: colours[i], opacity: '0.5'});
 		scratch.id = i;
 		scratch.show = false;
@@ -146,7 +165,22 @@ for (var i=1; i<inputFile.length; i++) {colours[i] = Raphael.getColor();}
 		}
 	})
 	drawAxis();
-	
+	drawTicks();
+	var ticksClicked = 0;
+	ticks.click(function(){
+		// replace the other ticks that have been clicked on the same axis, if they exist, otherwise create it. 
+		if(userInput[this.axis] != -1){
+			for (var i=0; i<ticks.length; i++){
+				if(ticks[i].axis == this.axis && ticks[i].coord == userInput[this.axis])
+					{
+					ticks[i].attr({opacity: 0.5});	
+					break;
+					}
+			}
+		}
+		this.attr({opacity: 1});
+		userInput[this.axis] = this.coord;
+	})
 	
 }
 
@@ -164,6 +198,16 @@ function loadData(file){
 	xhttp.overrideMimeType("text/csv");
 	xhttp.send("");
 	return xhttp.responseText; 
+}
+
+function dotproduct(a,b) {
+	var n = 0, lim = Math.min(a.length,b.length);
+	for (var i = 0; i < lim; i++) n += a[i] * b[i];
+	return n;
+}
+
+function cosineSim(a,b){
+	return (dotproduct(a,b)/(Math.abs(a)*Math.abs(b)));
 }
 
 //CSVToArray Author:
