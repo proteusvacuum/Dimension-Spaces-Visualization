@@ -178,10 +178,25 @@ for (var i=1; i<inputFile.length; i++) {colours[i] = Raphael.getColor();}
 					}
 			}
 		}
+		else {ticksClicked++}
 		this.attr({opacity: 1});
 		userInput[this.axis] = this.coord;
+	//once all the user input is no longer -1,
+		if(ticksClicked >=3){
+		//do the cosine similarity between the coordinates given and the dataset.
+		for (var i=0;i<data.length;i++){
+		cossim = cosineSim(data[i],userInput)	
+		}
+		
+		
+		//reset all the ticks to zero so we can start again.	
+		ticksClicked = 0;
+		}
 	})
-	
+
+		
+		
+		
 }
 
 
@@ -206,8 +221,8 @@ function dotproduct(a,b) {
 	return n;
 }
 
-function cosineSim(a,b){
-	return (dotproduct(a,b)/(Math.abs(a)*Math.abs(b)));
+function cosineSim(c,d){
+	return (dotproduct(c,d)/(Math.abs(c)*Math.abs(d)));
 }
 
 //CSVToArray Author:
