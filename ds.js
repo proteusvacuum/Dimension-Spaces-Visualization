@@ -34,6 +34,7 @@ var dimensionsSVG = dimensions[0]+' '+dimensions[1]+'';
 	var graphs = paper.set();
 	var controlButtons = paper.set();
 	var ticks = paper.set();
+	var similarities = paper.set();
 	
 	var cButtoncoord = 50;
 //******************************************************************************************************
@@ -140,7 +141,7 @@ for (var i=1; i<inputFile.length; i++) {colours[i] = Raphael.getColor();}
 		paper.text(800,cButtoncoord,names[i]).attr({fill: colours[i]});
 		cButtoncoord+=20;
 	}
-
+	cButtoncoord = 50;
 	controlButtons.click(function(){
 		if (this.firstClick == false){
 			    graph(data[this.id],this.id);
@@ -167,6 +168,7 @@ for (var i=1; i<inputFile.length; i++) {colours[i] = Raphael.getColor();}
 	drawAxis();
 	drawTicks();
 	var ticksClicked = 0;
+	
 	ticks.click(function(){
 		// replace the other ticks that have been clicked on the same axis, if they exist, otherwise create it. 
 		if(userInput[this.axis] != -1){
@@ -180,17 +182,25 @@ for (var i=1; i<inputFile.length; i++) {colours[i] = Raphael.getColor();}
 		}
 		else {ticksClicked++}
 		this.attr({opacity: 1});
-		userInput[this.axis] = this.coord;
+		userInput[this.axis] = this.coord/5;
 	//once all the user input is no longer -1,
 		if(ticksClicked >=3){
+
 		//do the cosine similarity between the coordinates given and the dataset.
-		for (var i=0;i<data.length;i++){
+		for (var i=1;i<data.length-1;i++){
 		cossim = cosineSim(data[i],userInput)	
+		similarities.push(paper.text(700,cButtoncoord,cossim).attr({fill:colours[i]}));
+		cButtoncoord +=20
+		}
+		//reset all the ticks to zero so we can start again.	
+		for(var i=0;i<3;i++){
+			userInput[i] = -1;
+		}
+		ticksClicked = 0;
+		for(var i=0;i<ticks.length; i++){
+			ticks[i].attr({opacity: 0.5});
 		}
 		
-		
-		//reset all the ticks to zero so we can start again.	
-		ticksClicked = 0;
 		}
 	})
 
@@ -216,13 +226,24 @@ function loadData(file){
 }
 
 function dotproduct(a,b) {
-	var n = 0, lim = Math.min(a.length,b.length);
+	var n = 0;
+	var lim = Math.min(a.length,b.length);
 	for (var i = 0; i < lim; i++) n += a[i] * b[i];
+
 	return n;
+}
+function magnitude(a){
+	//(sqrt(a[1]^2 + a[2]^2 +... + a[n]^2)
+	var b = 0;
+	for (var i=0;i<a.length;i++){
+		b += a[i]*a[i];
+	}
+	return Math.sqrt(b);
 }
 
 function cosineSim(c,d){
-	return (dotproduct(c,d)/(Math.abs(c)*Math.abs(d)));
+	var cossim = dotproduct(c,d)/(magnitude(c)*magnitude(d))
+	return (cossim);
 }
 
 //CSVToArray Author:
