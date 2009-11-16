@@ -24,6 +24,7 @@ var dimensionsSVG = dimensions[0]+' '+dimensions[1]+'';
 	var axisnames = new Array();
 	var data = new Array();
 	var userInput = new Array(-1,-1,-1);
+	var cossim = new Array();
 	
 	var csv = loadData("instruments.csv");
 	var inputFile = CSVToArray(csv);
@@ -109,6 +110,10 @@ function showGraph(indexToShow){
 		    graphs[i].show();
       }
 }
+function sortNumber(a, b)
+{
+return b-a;
+}
 //******************************************************************************************************
 //					END FUNCTION DECLARATIONS
 //******************************************************************************************************
@@ -188,10 +193,25 @@ for (var i=1; i<inputFile.length; i++) {colours[i] = Raphael.getColor();}
 
 		//do the cosine similarity between the coordinates given and the dataset.
 		for (var i=1;i<data.length-1;i++){
-		cossim = cosineSim(data[i],userInput)	
-		similarities.push(paper.text(700,cButtoncoord,cossim).attr({fill:colours[i]}));
-		cButtoncoord +=20
+		cossim[i-1] = cosineSim(data[i],userInput)			
+		//similarities.push(paper.text(700,cButtoncoord,cossim[i-1]).attr({fill:colours[i]}));
+		//cButtoncoord +=20
 		}
+		
+		//alert(cossim.max()[0] + " " + cossim.max()[1])
+		//display all the graphs which have the maximum cossim:
+		var maxVals = new Array();
+		var i = 1;
+		maxVals[0] = cossim.max();
+		cossim[maxVals[0][1]] = -1;
+		while(cossim.max()[0] == maxVals[0][0]){
+			maxVals[i] = cossim.max();
+			cossim[maxVals[i][1]]=-1;
+			i++;
+		}
+		document.write(maxVals);
+		
+		
 		//reset all the ticks to zero so we can start again.	
 		for(var i=0;i<3;i++){
 			userInput[i] = -1;
@@ -245,6 +265,20 @@ function cosineSim(c,d){
 	var cossim = dotproduct(c,d)/(magnitude(c)*magnitude(d))
 	return (cossim);
 }
+
+Array.prototype.max = function() {
+	var max = new Array();
+	max[0] = this[0];
+	max[1] = 0;	//this is the id of the maximum number in the array
+	var len = this.length;
+	for (var i = 1; i < len; i++) 
+		if (this[i] > max[0]) {
+			max[0] = this[i];
+			max[1] = i;
+		}
+return max;
+}
+
 
 //CSVToArray Author:
 // 	Ben Nadel
