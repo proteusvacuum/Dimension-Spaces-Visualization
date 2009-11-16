@@ -194,8 +194,8 @@ for (var i=1; i<inputFile.length; i++) {colours[i] = Raphael.getColor();}
 		//do the cosine similarity between the coordinates given and the dataset.
 		for (var i=1;i<data.length-1;i++){
 		cossim[i-1] = cosineSim(data[i],userInput)			
-		//similarities.push(paper.text(700,cButtoncoord,cossim[i-1]).attr({fill:colours[i]}));
-		//cButtoncoord +=20
+		similarities.push(paper.text(700,cButtoncoord,cossim[i-1]).attr({fill:colours[i]}));
+		cButtoncoord +=20
 		}
 		
 		//alert(cossim.max()[0] + " " + cossim.max()[1])
@@ -209,8 +209,13 @@ for (var i=1; i<inputFile.length; i++) {colours[i] = Raphael.getColor();}
 			cossim[maxVals[i][1]]=-1;
 			i++;
 		}
-		document.write(maxVals);
-		
+		//document.write(maxVals);
+		//display the names of the instruments that you want:
+		for (var i=0; i<maxVals.length; i++){
+		//alert(names[maxVals[i][1]+1]);
+			graph(data[maxVals[i][1]+1],i);
+			paper.text(400,400+10*i,names[maxVals[i][1]+1]).attr({fill: '#ddd'});
+		}
 		
 		//reset all the ticks to zero so we can start again.	
 		for(var i=0;i<3;i++){
