@@ -1,10 +1,10 @@
 <html>
     <head>
-        <title>Dimension Space Test</title>
+        <title>Dimension Space Visualization</title>
         <script type="text/javascript" src="raphael.js"></script>
         <script type="text/javascript" src="ds.js"></script>
 				<style type="text/css">
-				#canvas_container {width: 500px; position:fixed; left:500; top:50px;}
+				#canvas_container {width: 500px; position:fixed; left:700; top:50px;}
 				body { background: url("black.png")}
 				table{color:#ddd} 
 				A {color:#ddd;
@@ -38,21 +38,20 @@
         </style>
     </head>
     <body>
-    <table>
-    <tr>
-    	<td align = "top">
-    		<div id="canvas_container"></div>
-    	</td>
-    	<td>
-    	<table><tr><td><div id = "controlControl"></div></td></tr></table>
-    		<table id="control" style="display:none"><tr>
-    			<td></td></tr></table>
-    	</td>
-    	<td valign = "top">
-				<table valign = "top" id="graphsShown"><tr><td></tr></td></table>
-			</td>
-		</tr>
-		</table>
-    </body>
+		
+    	<div style="border:3px white" id="canvas_container"></div>    	
+    	
+    	<table valign = "top">
+    	<tr> 
+    	<td width = "400"><div id = "controlControl"></div></td>
+    	<td><div valign = "top" id = "clear" style="display:none;"></td>    	
+    	</tr>
+    	<tr>
+    	<td  valign = "top"><table valign = "top" id="control" style="display:none"><tr><td></td></tr></table></td>    	  	
+    	<td  valign = "top"><table valign = "top" id="graphsShown"><tr><td valign = "top"></td></tr></table></td>
+    	</tr>
+
+			</table>
+
 </html>
         

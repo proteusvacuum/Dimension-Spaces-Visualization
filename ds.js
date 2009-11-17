@@ -2,44 +2,50 @@
 //farid.rener@mail.mcgill.ca
 //MUMT 502
 
-//TODO: Link cossim'd list and full list. Add 'Clear All' button
+//TODO: Get some new colours, add URL for each device. 
+//			
 
 window.onload = function() {
-      var paper = new Raphael(document.getElementById('canvas_container'), 1000, 1000);
+  var paper = new Raphael(document.getElementById('canvas_container'), 1000, 1000);
 	
 	var dimensions = [250, 250];
 	var dimensionsSVG = dimensions[0]+' '+dimensions[1]+'';	//To centre the graph
-	
 	
 	var graphsShown = document.getElementById('graphsShown');
 	var graphsShownRows = {};
 				graphsShownRows[0] = graphsShown.insertRow(0);
 	var graphsShownCells = {};
-				graphsShownCells[0] = graphsShownRows[0].insertCell(0);
+				//graphsShownCells[0] = graphsShownRows[0].insertCell(0);
+				//graphsShownCells[0].innerHTML = "Displayed Graphs";
 				
 	var controlTable = document.getElementById('control');
 	var controlTableRows = {}
 				controlTableRows[0] = controlTable.insertRow(0);
 	var controlTableCells = {}
 				controlTableCells[0] = controlTableRows[0].insertCell(0);
+				
+	var clearAll = document.getElementById('clear');
+
+//Data loading etc.
+	var csv = loadData("instruments.csv");
+	var inputFile = CSVToArray(csv);
+	var nAxis = inputFile[0].length - 1;
+  var nData = inputFile.length;
+  var nPoints = 5;	//This is the scaling value, i.e. if the maximum value used in Dimension Spaces anaysis was 5, this value would be 5. TODO: insert this somewhere in the csv file.
 
 
 	var colours = new Array();
 	var names = new Array();
 	var axisnames = new Array();
 	var data = new Array();
-	var userInput = new Array(-1,-1,-1);
+	var userInput = new Array();
+			for (var i=0;i<nAxis;i++){userInput[i] = -1;}
 	var cossim = new Array();
 	
-	//Data loading etc.
-	var csv = loadData("instruments.csv");
-	var inputFile = CSVToArray(csv);
-	var nAxis = inputFile[0].length - 1;
-  	var nData = inputFile.length;
-  	var nPoints = 5;	//This is the scaling value, i.e. if the maximum value used in Dimension Spaces anaysis was 5, this value would be 5. 
+	
 	
 	//Display
-	var graphs = {};
+	var graphs = new Array();
 	var ticks = new Array();
 		for (var i = 0; i<nAxis; i++){ticks[i] = new Array();}
 
@@ -58,10 +64,9 @@ function graph(toGraph, controlID, itemClicked){
 
 				//Display the new graph in the 'Graphs Shown Table'
 				graphsShownRows[controlID] = graphsShown.insertRow(graphsShown.rows.length)
-				graphsShownCells[controlID] = graphsShownRows[controlID].insertCell(0);
-
+				graphsShownCells[controlID] = graphsShownRows[controlID].insertCell(0);1
 				graphsShownCells[controlID].innerHTML = controlTableCells[controlID].innerHTML;
-				graphsShownCells[controlID].id = graphsShown.rows.length-1
+				graphsShownCells[controlID].id = controlID
 				graphsShownCells[controlID].onclick = 
 						(function(){							
 							hideGraph(controlID,controlTableCells[controlID]); 		
@@ -100,8 +105,8 @@ function drawTicks(){
 	for(var j = 0; j<nAxis; j++){
 		var nextCoordx = (dimensions[0]* Math.sin(2*Math.PI*j/nAxis));
 		var nextCoordy = (dimensions[1]* Math.cos(2*Math.PI*j/nAxis));
-		for(var i=1; i<6; i++){
-			scratch = paper.circle(nextCoordx*i/5,nextCoordy*i/5,4).attr({fill: '#ddd', opacity: '0.5', translation: dimensionsSVG});
+		for(var i=1; i<nPoints+1; i++){
+			scratch = paper.circle(nextCoordx*i/nPoints,nextCoordy*i/nPoints,4).attr({fill: '#ddd', opacity: '0.5', translation: dimensionsSVG});
 			scratch.axis = j;	//the axis the tick is on
 			scratch.coord = i;	//the coordinate point
 			scratch.mouseover(function(){document.body.style.cursor = 'pointer'});
@@ -118,11 +123,10 @@ function drawTicks(){
 				this.attr({opacity: 1});
 				userInput[this.axis] = this.coord/nPoints;
 				//once all the user input is no longer -1,
-				if(ticksClicked >=3){
+				if(ticksClicked >=nAxis){
 				//do the cosine similarity between the coordinates given and the dataset.
 				for (var i=1;i<data.length-1;i++){
 					cossim[i-1] = cosineSim(data[i],userInput)			
-	
 				}		
 				var maxVals = new Array();
 				var i = 1;
@@ -133,11 +137,10 @@ function drawTicks(){
 					cossim[maxVals[i][1]]=-1;										
 					i++;
 				}
-				//document.write(maxVals);
-				//display the names of the instruments that you want:
 				for (var i=0; i<maxVals.length; i++){
-					controlClick(controlTableCells[maxVals[i][1]+1]);					
-					
+					if(controlTableCells[maxVals[i][1]+1].show == false)
+					controlClick(controlTableCells[maxVals[i][1]+1]);	
+										
 				}
 				ticksClicked = 0;
 				firstComparison = false;}
@@ -164,8 +167,7 @@ function hideGraph(indexToHide,item){
 			item.style.opacity = 0.5;
 			item.style.filter = 'alpha(opacity = 50)';  
 			 
-			graphsShown.deleteRow(graphsShownCells[indexToHide].id)  
-
+			graphsShown.deleteRow(graphsShownRows[indexToHide].rowIndex)
 }
 function showGraph(indexToShow,item){
       graphs[indexToShow].show();
@@ -201,13 +203,21 @@ function toggleDiv(divid){
 		document.getElementById(divid).style.display = 'none';
 	}
 }
+function showDiv(divid){
+	document.getElementById(divid).style.display = 'block';
+}
+function hideDiv(divid){
+	document.getElementById(divid).style.display = 'none';
+}
 function controlClick(a){
 			if (a.firstClick == false){
 				graph(data[a.id],a.id,a);
+				showDiv('clear');
 			}
 			else{
 				if (a.show == false){
 					showGraph(a.id, a);
+					showDiv('clear');
 				}
 				else{
 					hideGraph(a.id,a);	
@@ -226,7 +236,7 @@ for (var i=1; i<inputFile.length; i++) {colours[i] = Raphael.getColor();}
       for (var i=1; i<inputFile.length; i++) 
       		{names[i] = inputFile[i][0];}
 //Axis names
-       for (var i=0; i<3; i++)
+       for (var i=0; i<nAxis; i++)
        		{axisnames[i] = inputFile[0][i+1]}
 //Fill data array
 	for (var i=1; i<inputFile.length; i++){
@@ -235,24 +245,37 @@ for (var i=1; i<inputFile.length; i++) {colours[i] = Raphael.getColor();}
 		  dataScratch[j-1] = inputFile[i][j]/nPoints;  
 	    }
 	    data[i] = dataScratch;
-	    //paper.text(400,280+10*i,data[i][1]).attr({fill: colours[i]});
 	}
+
+
+
+//Add 'clear all' functionality
+clearAll.innerHTML = "Clear All"
+clearAll.onmouseover = function(){this.style.cursor = 'pointer'}
+clearAll.onclick = 
+	function(){
+		hideDiv('clear');
+		for(var i=1;i<graphs.length;i++){
+			if(graphs[i]!= undefined)
+				{hideGraph(i,controlTableCells[i]);}
+		}
+	};
 
 //Expand and collapse the names of the graphs:
 var x = document.getElementById('controlControl');
 var controlsHidden = true;
-	x.innerHTML = "[ + ]"
+	x.innerHTML = "[Show Instrument List]"
 	x.onmouseover = function(){this.style.cursor = 'pointer'}
 	x.onclick= 
 	function(){
 
 		toggleDiv('control');
 		if (controlsHidden == true){
-			document.getElementById('controlControl').innerHTML = "[ - ]";
+			document.getElementById('controlControl').innerHTML = "[Hide Instrument List]";
 			controlsHidden = false;
 		}
 		else {
-			document.getElementById('controlControl').innerHTML = "[ + ]";
+			document.getElementById('controlControl').innerHTML = "[Show Instrument List]";
 			controlsHidden = true;
 		}
 	}
