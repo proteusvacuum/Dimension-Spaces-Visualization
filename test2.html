@@ -3,10 +3,52 @@
         <title>Dimension Space Test</title>
         <script type="text/javascript" src="raphael.js"></script>
         <script type="text/javascript" src="ds.js"></script>
+        
+        <script language="javascript">
+		  function toggleDiv(divid){
+		    if(document.getElementById(divid).style.display == 'none'){
+		      document.getElementById(divid).style.display = 'block';
+		    }else{
+		      document.getElementById(divid).style.display = 'none';
+		    }
+		  }
+</script>
+        
         <style type="text/css">
-					#canvas_container {width: 500px;}
-					body { background: url("black.png")}
-					table{color:FFFFFF} 
+		#canvas_container {width: 500px;}
+		body { background: url("black.png")}
+		table{color:#ddd} 
+		A {color:#ddd;
+			text-decoration: none}
+		
+		
+		#tt {
+		 position:absolute;
+		 display:block;
+		 background:url(images/tt_left.gif) top left no-repeat;
+		 }
+		 #tttop {
+		 display:block;
+		 height:5px;
+		 margin-left:5px;
+		 background:url(images/tt_top.gif) top right no-repeat;
+		 overflow:hidden;
+		 }
+		 #ttcont {
+		 display:block;
+		 padding:2px 12px 3px 7px;
+		 margin-left:5px;
+		 background:url("black.png");
+		 color:#fff;
+		 }
+		#ttbot {
+		display:block;
+		height:5px;
+		margin-left:5px;
+		background:url(images/tt_bottom.gif) top right no-repeat;
+		overflow:hidden;
+		}
+
         </style>
     </head>
     <body>
@@ -16,7 +58,9 @@
     		<div id="canvas_container"></div>
     	</td>
     	<td>
-    		<table id="control"><tr><td></td></tr></table>
+    		<table id="control" style="display:none"><tr>
+    			<a href="javascript:;" onmousedown="toggleDiv('control');">[+]</a>
+    			<td></td></tr></table>
     	</td>
     	<td>
 				<table id="similarities"><tr><td></tr></td></table>
