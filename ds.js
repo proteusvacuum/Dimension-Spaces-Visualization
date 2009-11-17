@@ -2,14 +2,15 @@
 //farid.rener@mail.mcgill.ca
 //MUMT 502
 
-//TODO: Figure out a new way of displaying the list. Display name of graph on mouseover. 
+//TODO: Display name of graph on mouseover. 
 
 window.onload = function() {
       var paper = new Raphael(document.getElementById('canvas_container'), 1000, 1000);
 	
-
 var dimensions = [250, 250];
 var dimensionsSVG = dimensions[0]+' '+dimensions[1]+'';
+  var similarityTable = document.getElementById('similarities');
+  var controlTable = document.getElementById('control');
       //data
 // 	var theremin = [1.,1.,0.25,0.25,0.1,0.1,1.];
 // 	var lightningDrum = [0.5,0.66,0.375,0.25,0.1,0.1,1.];
@@ -29,15 +30,20 @@ var dimensionsSVG = dimensions[0]+' '+dimensions[1]+'';
 	var csv = loadData("instruments.csv");
 	var inputFile = CSVToArray(csv);
 	var nAxis = inputFile[0].length - 1;
-        var nData = inputFile.length;
+  var nData = inputFile.length;
+  var nPoints = 5;
 	
 	//Group of elements
-	var graphs = paper.set();
+	//var graphs = paper.set();
+	var graphs = {};
 	var controlButtons = paper.set();
-	var ticks = paper.set();
+	//var ticks = paper.set();
+	var ticks = new Array();
+		for (var i = 0; i<nAxis; i++){ticks[i] = new Array();}
 	var similarities = paper.set();
 	
 	var cButtoncoord = 50;
+	var firstComparison = true;
 //******************************************************************************************************
 //					FUNCTION DECLARATIONS
 //******************************************************************************************************
@@ -63,8 +69,9 @@ function graph(toGraph, controlID){
 	      point = 'M'+firstPoint + point + 'z';//'L' + firstPoint;
 	      var aNewGraph = paper.path(point).attr({fill:colours[controlID], translation:dimensionsSVG , stroke: '#ddd', 'stroke-width': 2, opacity: 0.5});
 	      aNewGraph.id = controlID;
-	      graphs.push(aNewGraph).insertBefore(graphs[0]);
-	      graphs.click(function(){this.insertBefore(graphs[0])
+	      graphs[controlID]=aNewGraph.insertBefore(graphs[0]).click(function(){this.insertBefore(graphs[0]);
+	      //graphs.push(aNewGraph).insertBefore(graphs[0]);
+	      //graphs.click(function(){this.insertBefore(graphs[0])
 	      });	
 }
 function drawTicks(){
@@ -77,7 +84,71 @@ function drawTicks(){
 			scratch = paper.circle(nextCoordx*i/5,nextCoordy*i/5,4).attr({fill: '#ddd', opacity: '0.5', translation: dimensionsSVG});
 			scratch.axis = j;	//the axis the tick is on
 			scratch.coord = i;	//the coordinate point
-			ticks.push(scratch);
+
+			ticks[j][i-1] = scratch.click(function(){
+								// replace the other ticks that have been clicked on the same axis, if they exist, otherwise create it. 
+					
+					if(userInput[this.axis] != -1)
+					{
+						ticks[this.axis][userInput[this.axis]*5-1].attr({opacity:0.5});	
+						if(!firstComparison){ticksClicked++}
+					}
+					else {ticksClicked++}
+					this.attr({opacity: 1});
+					userInput[this.axis] = this.coord/5;
+				//once all the user input is no longer -1,
+					if(ticksClicked >=3){
+								//do the cosine similarity between the coordinates given and the dataset.
+								for (var i=1;i<data.length-1;i++){
+								cossim[i-1] = cosineSim(data[i],userInput)			
+								//similarities.push(paper.text(700,cButtoncoord,cossim[i-1]).attr({fill:colours[i]}));
+								//cButtoncoord +=20
+								var x = similarityTable.insertRow(i)
+								var y = x.insertCell(0);
+								y.id = i
+								y.onclick = (function(){alert(this.id)})
+								y.innerHTML = cossim[i-1];		
+								}		
+								//alert(cossim.max()[0] + " " + cossim.max()[1])
+								//display all the graphs which have the maximum cossim:
+								var maxVals = new Array();
+								var i = 1;
+								maxVals[0] = cossim.max();
+								cossim[maxVals[0][1]] = -1;
+								while(cossim.max()[0] == maxVals[0][0]){
+									maxVals[i] = cossim.max();
+									cossim[maxVals[i][1]]=-1;
+									i++;
+								}
+								//document.write(maxVals);
+								//display the names of the instruments that you want:
+								for (var i=0; i<maxVals.length; i++){
+								//alert(names[maxVals[i][1]+1]);
+									graph(data[maxVals[i][1]+1],i);
+									paper.text(400,400+10*i,names[maxVals[i][1]+1]).attr({fill: '#ddd'});
+								}
+		
+								//reset all the ticks to zero so we can start again.	
+			//					for(var i=0;i<3;i++){
+			//						userInput[i] = -1;
+			//					}
+					
+								ticksClicked = 0;
+								firstComparison = false;
+			//					for(var i=0;i<nAxis; i++){
+			//						for(var j = 0; j<nPoints;j++){
+			//						ticks[i][j].attr({opacity: 0.5});}
+			//					}
+		
+					}
+			
+			
+			
+			
+			
+			
+			});;
+//			ticks.push(scratch);
 		}
 
 	}
@@ -93,27 +164,35 @@ function drawAxis(){
 	      nextCoordy = nextCoordy+'';
 	      axis = axis + 'M 0 0 l' + nextCoordx + ' '+ nextCoordy;
       }
-      graphs.push(paper.path(axis).attr({stroke:'#796d5f', 'stroke-width': 1.5, translation: dimensionsSVG}));
-      
+      //graphs.push(paper.path(axis).attr({stroke:'#796d5f', 'stroke-width': 1.5, translation: dimensionsSVG}));
+      graphs[0] = paper.path(axis).attr({stroke:'#796d5f', 'stroke-width': 1.5, translation: dimensionsSVG});
 }
 function hideGraph(indexToHide){
-      for (var i=1;i<graphs.length;i++)
-      {
-	      if (graphs[i].id == indexToHide)
-		    graphs[i].hide();
-      }
+      //for (var i=1;i<graphs.length;i++)
+      //{
+	    //  if (graphs[i].id == indexToHide)
+		  //  graphs[i].hide();
+      //}
+      graphs[indexToHide].hide();
 }
 function showGraph(indexToShow){
-      for (var i=1;i<graphs.length;i++)
-      {
-	      if (graphs[i].id == indexToShow)
-		    graphs[i].show();
-      }
+      //for (var i=1;i<graphs.length;i++)
+      //{
+	      //if (graphs[i].id == indexToShow)
+		    //graphs[i].show();
+      //}
+      graphs[indexToShow].show();
 }
 function sortNumber(a, b)
 {
 return b-a;
 }
+
+function controlClick(){
+
+
+}
+
 //******************************************************************************************************
 //					END FUNCTION DECLARATIONS
 //******************************************************************************************************
@@ -138,96 +217,79 @@ for (var i=1; i<inputFile.length; i++) {colours[i] = Raphael.getColor();}
 
 //draw the control circles.
 	for (var i = 1; i<inputFile.length-1; i++){
-		var scratch = paper.circle(900,cButtoncoord,10).attr({fill: colours[i], opacity: '0.5'});
-		scratch.id = i;
-		scratch.show = false;
-		scratch.firstClick = false;
-		controlButtons.push(scratch)
-		paper.text(800,cButtoncoord,names[i]).attr({fill: colours[i]});
-		cButtoncoord+=20;
+		var x = controlTable.insertRow(i)
+		var y = x.insertCell(0);
+		y.id = i
+		y.show = false;
+		y.firstClick = false;
+		y.onclick = 
+		(function(){
+						if (this.firstClick == false){
+									graph(data[this.id],this.id);
+									this.firstClick=true;
+									this.show = true;
+									//this.attr({opacity: 0.95});
+									//paper.text(400,280,data[this.id][1]).attr({fill:Raphael.getColor()});
+						}
+						else{
+								if (this.show == false){
+									//this.attr({opacity: 0.95});
+									//graphs[this.id].show();
+									showGraph(this.id);
+									this.show = true;
+									}
+								else{
+									//this.attr({opacity: 0.5});
+									hideGraph(this.id);
+									//graphs[this.id].hide();
+									this.show=false;
+								}
+						}
+		})
+
+		y.innerHTML = "<font color = \"" + colours[i] +"\">" + names[i]+ "</font color>";
+	
+	
+//		var scratch = paper.circle(900,cButtoncoord,10).attr({fill: colours[i], opacity: '0.5'});
+//		scratch.id = i;
+//		scratch.show = false;
+//		scratch.firstClick = false;
+//		controlButtons.push(scratch)
+//		paper.text(800,cButtoncoord,names[i]).attr({fill: colours[i]});
+//		cButtoncoord+=20;
 	}
-	cButtoncoord = 50;
-	controlButtons.click(function(){
-		if (this.firstClick == false){
-			    graph(data[this.id],this.id);
-			    this.firstClick=true;
-			    this.show = true;
-			    this.attr({opacity: 0.95});
-			    //paper.text(400,280,data[this.id][1]).attr({fill:Raphael.getColor()});
-		}
-		else{
-		    if (this.show == false){
-			    this.attr({opacity: 0.95});
-			    //graphs[this.id].show();
-			    showGraph(this.id);
-			    this.show = true;
-			    }
-		    else{
-			    this.attr({opacity: 0.5});
-			    hideGraph(this.id);
-			    //graphs[this.id].hide();
-			    this.show=false;
-		    }
-		}
-	})
+//	cButtoncoord = 50;
+//	controlButtons.click(function(){
+//		if (this.firstClick == false){
+//			    graph(data[this.id],this.id);
+//			    this.firstClick=true;
+//			    this.show = true;
+//			    this.attr({opacity: 0.95});
+//			    //paper.text(400,280,data[this.id][1]).attr({fill:Raphael.getColor()});
+//		}
+//		else{
+//		    if (this.show == false){
+//			    this.attr({opacity: 0.95});
+//			    //graphs[this.id].show();
+//			    showGraph(this.id);
+//			    this.show = true;
+//			    }
+//		    else{
+//			    this.attr({opacity: 0.5});
+//			    hideGraph(this.id);
+//			    //graphs[this.id].hide();
+//			    this.show=false;
+//		    }
+//		}
+//	})
 	drawAxis();
 	drawTicks();
 	var ticksClicked = 0;
 	
-	ticks.click(function(){
-		// replace the other ticks that have been clicked on the same axis, if they exist, otherwise create it. 
-		if(userInput[this.axis] != -1){
-			for (var i=0; i<ticks.length; i++){
-				if(ticks[i].axis == this.axis && ticks[i].coord == userInput[this.axis])
-					{
-					ticks[i].attr({opacity: 0.5});	
-					break;
-					}
-			}
-		}
-		else {ticksClicked++}
-		this.attr({opacity: 1});
-		userInput[this.axis] = this.coord/5;
-	//once all the user input is no longer -1,
-		if(ticksClicked >=3){
+//	ticks.click(function(){
+	function clickTicks(){
 
-		//do the cosine similarity between the coordinates given and the dataset.
-		for (var i=1;i<data.length-1;i++){
-		cossim[i-1] = cosineSim(data[i],userInput)			
-		similarities.push(paper.text(700,cButtoncoord,cossim[i-1]).attr({fill:colours[i]}));
-		cButtoncoord +=20
-		}
-		
-		//alert(cossim.max()[0] + " " + cossim.max()[1])
-		//display all the graphs which have the maximum cossim:
-		var maxVals = new Array();
-		var i = 1;
-		maxVals[0] = cossim.max();
-		cossim[maxVals[0][1]] = -1;
-		while(cossim.max()[0] == maxVals[0][0]){
-			maxVals[i] = cossim.max();
-			cossim[maxVals[i][1]]=-1;
-			i++;
-		}
-		//document.write(maxVals);
-		//display the names of the instruments that you want:
-		for (var i=0; i<maxVals.length; i++){
-		//alert(names[maxVals[i][1]+1]);
-			graph(data[maxVals[i][1]+1],i);
-			paper.text(400,400+10*i,names[maxVals[i][1]+1]).attr({fill: '#ddd'});
-		}
-		
-		//reset all the ticks to zero so we can start again.	
-		for(var i=0;i<3;i++){
-			userInput[i] = -1;
-		}
-		ticksClicked = 0;
-		for(var i=0;i<ticks.length; i++){
-			ticks[i].attr({opacity: 0.5});
-		}
-		
-		}
-	})
+	}
 
 		
 		
@@ -283,6 +345,83 @@ Array.prototype.max = function() {
 		}
 return max;
 }
+
+
+
+var tooltip=function(){
+	var id = 'tt';
+	var top = 3;
+	var left = 3;
+	var maxw = 300;
+	var speed = 10;
+	var timer = 20;
+	var endalpha = 95;
+	var alpha = 0;
+	var tt,t,c,b,h;
+	var ie = document.all ? true : false;
+	return{
+		show:function(v,w){
+			if(tt == null){
+				tt = document.createElement('div');
+				tt.setAttribute('id',id);
+				t = document.createElement('div');
+				t.setAttribute('id',id + 'top');
+				c = document.createElement('div');
+				c.setAttribute('id',id + 'cont');
+				b = document.createElement('div');
+				b.setAttribute('id',id + 'bot');
+				tt.appendChild(t);
+				tt.appendChild(c);
+				tt.appendChild(b);
+				document.body.appendChild(tt);
+				tt.style.opacity = 0;
+				tt.style.filter = 'alpha(opacity=0)';
+				document.onmousemove = this.pos;
+			}
+			tt.style.display = 'block';
+			c.innerHTML = v;
+			tt.style.width = w ? w + 'px' : 'auto';
+			if(!w && ie){
+				t.style.display = 'none';
+				b.style.display = 'none';
+				tt.style.width = tt.offsetWidth;
+				t.style.display = 'block';
+				b.style.display = 'block';
+			}
+			if(tt.offsetWidth > maxw){tt.style.width = maxw + 'px'}
+			h = parseInt(tt.offsetHeight) + top;
+			clearInterval(tt.timer);
+			tt.timer = setInterval(function(){tooltip.fade(1)},timer);
+		},
+		pos:function(e){
+			var u = ie ? event.clientY + document.documentElement.scrollTop : e.pageY;
+			var l = ie ? event.clientX + document.documentElement.scrollLeft : e.pageX;
+			tt.style.top = (u - h) + 'px';
+			tt.style.left = (l + left) + 'px';
+		},
+		fade:function(d){
+			var a = alpha;
+			if((a != endalpha && d == 1) || (a != 0 && d == -1)){
+				var i = speed;
+				if(endalpha - a < speed && d == 1){
+					i = endalpha - a;
+				}else if(alpha < speed && d == -1){
+					i = a;
+				}
+				alpha = a + (i * d);
+				tt.style.opacity = alpha * .01;
+				tt.style.filter = 'alpha(opacity=' + alpha + ')';
+			}else{
+				clearInterval(tt.timer);
+				if(d == -1){tt.style.display = 'none'}
+			}
+		},
+		hide:function(){
+			clearInterval(tt.timer);
+			tt.timer = setInterval(function(){tooltip.fade(-1)},timer);
+		}
+	};
+}();
 
 
 //CSVToArray Author:
