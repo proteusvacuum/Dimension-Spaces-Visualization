@@ -13,6 +13,11 @@ window.onload = function() {
 	
 	var similarityTable = document.getElementById('similarities');
 	var controlTable = document.getElementById('control');
+	var controlTableRows = {}
+				controlTableRows[0] = controlTable.insertRow(0);
+	var controlTableCells = {}
+				controlTableCells[0] = controlTableRows[0].insertCell(0);
+
 
 	var colours = new Array();
 	var names = new Array();
@@ -109,11 +114,23 @@ function drawTicks(){
 				//document.write(maxVals);
 				//display the names of the instruments that you want:
 				for (var i=0; i<maxVals.length; i++){
-					graph(data[maxVals[i][1]+1],maxVals[i][1]+1);			
+					controlClick(controlTableCells[maxVals[i][1]+1]);
+					
 					var x = similarityTable.insertRow(i)
 					var y = x.insertCell(0);
-					y.id = i
-					y.innerHTML = "<font color = \"" + colours[maxVals[i][1]+1] +"\">" + names[maxVals[i][1]+1]+ "</font color>";		
+
+					y.innerHTML = controlTableCells[maxVals[i][1]+1].innerHTML
+					y.id = controlTableCells[maxVals[i][1]+1].id 
+					y.show = controlTableCells[maxVals[i][1]+1].show 
+					y.firstClick = controlTableCells[maxVals[i][1]+1].firstClick 
+					y.style.opacity = controlTableCells[maxVals[i][1]+1].style.opacity 
+					y.style.filter = controlTableCells[maxVals[i][1]+1].style.filter 
+					y.onclick = (function(){controlClick(this);})
+					y.onmouseover = controlTableCells[maxVals[i][1]+1].onmouseover 
+				
+
+					//y.id = i
+					//y.innerHTML = "<font color = \"" + colours[maxVals[i][1]+1] +"\">" + names[maxVals[i][1]+1]+ "</font color>";		
 					//paper.text(400,400+10*i,names[maxVals[i][1]+1]).attr({fill: '#ddd'});
 				}
 				ticksClicked = 0;
@@ -150,6 +167,38 @@ function sortNumber(a, b)
 //Gives highest to lowest. 
 	return b-a;
 }
+function toggleDiv(divid){
+	if(document.getElementById(divid).style.display == 'none'){
+		document.getElementById(divid).style.display = 'block';
+	}
+	else{
+		document.getElementById(divid).style.display = 'none';
+	}
+}
+function controlClick(a){
+			if (a.firstClick == false){
+				graph(data[a.id],a.id);
+				a.firstClick=true;
+				a.show = true;
+				a.style.opacity = 1;
+				a.style.filter = 'alpha(opacity = 100)';			
+				}
+			else{
+				if (a.show == false){
+				showGraph(a.id);
+				a.show = true;
+				insertAtTop(a.id);
+				a.style.opacity = 1;
+				a.style.filter = 'alpha(opacity = 100)';	
+				}
+				else{
+				hideGraph(a.id);
+				a.show=false;
+				a.style.opacity = 0.5;
+				a.style.filter = 'alpha(opacity = 50)';	
+				}
+			}
+}
 
 //******************************************************************************************************
 //					END FUNCTION DECLARATIONS
@@ -172,42 +221,43 @@ for (var i=1; i<inputFile.length; i++) {colours[i] = Raphael.getColor();}
 	    //paper.text(400,280+10*i,data[i][1]).attr({fill: colours[i]});
 	}
 
+//Expand and collapse the names of the graphs:
+var x = document.getElementById('controlControl');
+var controlsHidden = true;
+	x.innerHTML = "[ + ]"
+	x.onmouseover = function(){this.style.cursor = 'pointer'}
+	x.onclick= 
+	function(){
+
+		toggleDiv('control');
+		if (controlsHidden == true){
+			document.getElementById('controlControl').innerHTML = "[ - ]";
+			controlsHidden = false;
+		}
+		else {
+			document.getElementById('controlControl').innerHTML = "[ + ]";
+			controlsHidden = true;
+		}
+	}
+
+
+
 //Display the names of the graphs, with control
 //We want to be able to click each name so that the graph is shown, click again to hide it. 
 	for (var i = 1; i<inputFile.length-1; i++){
-		var x = controlTable.insertRow(i)
-		var y = x.insertCell(0);
-		y.id = i
-		y.show = false;
-		y.firstClick = false;
-		y.onclick = 
-		(function(){
-			if (this.firstClick == false){
-				graph(data[this.id],this.id);
-				this.firstClick=true;
-				this.show = true;			
-				}
-			else{
-				if (this.show == false){
-				showGraph(this.id);
-				this.show = true;
-				insertAtTop(this.id);
-				}
-				else{
-				hideGraph(this.id);
-				this.show=false;
-				}
-			}
-		})
-		//on mouseover, show more information... 
-//		y.onmouseover = function(){
-//		}
-//		y.onmouseout = function(){tooltip.hide();}
-		y.innerHTML = "<font color = \"" + colours[i] +"\">" + names[i]+ "</font color>";
+		controlTableRows[i] = controlTable.insertRow(i);
+		controlTableCells[i] = controlTableRows[i].insertCell(0);
+		controlTableCells[i].id = i
+		controlTableCells[i].show = false;
+		controlTableCells[i].firstClick = false;
+		controlTableCells[i].style.opacity = 0.5;
+		controlTableCells[i].style.filter = 'alpha(opacity = 50)';
+		controlTableCells[i].onclick = (function(){controlClick(this);})
+		controlTableCells[i].onmouseover = function(){this.style.cursor = 'pointer'}
+		controlTableCells[i].innerHTML = "<font color = \"" + colours[i] +"\">" + names[i]+ "</font color>";
 	}
 	drawAxis();
 	drawTicks();
-
 }
 
 function loadData(file){
