@@ -11,7 +11,12 @@ window.onload = function() {
 	var dimensionsSVG = dimensions[0]+' '+dimensions[1]+'';	//To centre the graph
 	
 	
-	var similarityTable = document.getElementById('similarities');
+	var graphsShown = document.getElementById('graphsShown');
+	var graphsShownRows = {};
+				graphsShownRows[0] = graphsShown.insertRow(0);
+	var graphsShownCells = {};
+				graphsShownCells[0] = graphsShownRows[0].insertCell(0);
+				
 	var controlTable = document.getElementById('control');
 	var controlTableRows = {}
 				controlTableRows[0] = controlTable.insertRow(0);
@@ -44,7 +49,26 @@ window.onload = function() {
 //******************************************************************************************************
 //					FUNCTION DECLARATIONS
 //******************************************************************************************************
-function graph(toGraph, controlID){
+function graph(toGraph, controlID, itemClicked){
+
+				itemClicked.firstClick=true;
+				itemClicked.show = true;
+				itemClicked.style.opacity = 1;
+				itemClicked.style.filter = 'alpha(opacity = 100)';	
+
+				//Display the new graph in the 'Graphs Shown Table'
+				graphsShownRows[controlID] = graphsShown.insertRow(graphsShown.rows.length)
+				graphsShownCells[controlID] = graphsShownRows[controlID].insertCell(0);
+
+				graphsShownCells[controlID].innerHTML = controlTableCells[controlID].innerHTML;
+				graphsShownCells[controlID].id = graphsShown.rows.length-1
+				graphsShownCells[controlID].onclick = 
+						(function(){							
+							hideGraph(controlID,controlTableCells[controlID]); 		
+						})
+				graphsShownCells[controlID].onmouseover = function(){this.style.cursor = 'pointer'}
+
+
       //for(var i=0; i<toGraph.length; j++){
 	      var firstPoint = '';
 	      var point = '';
@@ -80,7 +104,8 @@ function drawTicks(){
 			scratch = paper.circle(nextCoordx*i/5,nextCoordy*i/5,4).attr({fill: '#ddd', opacity: '0.5', translation: dimensionsSVG});
 			scratch.axis = j;	//the axis the tick is on
 			scratch.coord = i;	//the coordinate point
-
+			scratch.mouseover(function(){document.body.style.cursor = 'pointer'});
+			scratch.mouseout(function(){document.body.style.cursor = 'default'});
 			ticks[j][i-1] = scratch.click(function(){
 				if(userInput[this.axis] != -1)
 				{
@@ -97,10 +122,7 @@ function drawTicks(){
 				//do the cosine similarity between the coordinates given and the dataset.
 				for (var i=1;i<data.length-1;i++){
 					cossim[i-1] = cosineSim(data[i],userInput)			
-					//var x = similarityTable.insertRow(i)
-					//var y = x.insertCell(0);
-					//y.id = i
-					//y.innerHTML = cossim[i-1];		
+	
 				}		
 				var maxVals = new Array();
 				var i = 1;
@@ -114,24 +136,8 @@ function drawTicks(){
 				//document.write(maxVals);
 				//display the names of the instruments that you want:
 				for (var i=0; i<maxVals.length; i++){
-					controlClick(controlTableCells[maxVals[i][1]+1]);
+					controlClick(controlTableCells[maxVals[i][1]+1]);					
 					
-					var x = similarityTable.insertRow(i)
-					var y = x.insertCell(0);
-
-					y.innerHTML = controlTableCells[maxVals[i][1]+1].innerHTML
-					y.id = controlTableCells[maxVals[i][1]+1].id 
-					y.show = controlTableCells[maxVals[i][1]+1].show 
-					y.firstClick = controlTableCells[maxVals[i][1]+1].firstClick 
-					y.style.opacity = controlTableCells[maxVals[i][1]+1].style.opacity 
-					y.style.filter = controlTableCells[maxVals[i][1]+1].style.filter 
-					y.onclick = (function(){controlClick(this);})
-					y.onmouseover = controlTableCells[maxVals[i][1]+1].onmouseover 
-				
-
-					//y.id = i
-					//y.innerHTML = "<font color = \"" + colours[maxVals[i][1]+1] +"\">" + names[maxVals[i][1]+1]+ "</font color>";		
-					//paper.text(400,400+10*i,names[maxVals[i][1]+1]).attr({fill: '#ddd'});
 				}
 				ticksClicked = 0;
 				firstComparison = false;}
@@ -152,11 +158,31 @@ function drawAxis(){
       }
       graphs[0] = paper.path(axis).attr({stroke:'#796d5f', 'stroke-width': 1.5, translation: dimensionsSVG});
 }
-function hideGraph(indexToHide){
+function hideGraph(indexToHide,item){
       graphs[indexToHide].hide();
+			item.show=false;
+			item.style.opacity = 0.5;
+			item.style.filter = 'alpha(opacity = 50)';  
+			 
+			graphsShown.deleteRow(graphsShownCells[indexToHide].id)  
+
 }
-function showGraph(indexToShow){
+function showGraph(indexToShow,item){
       graphs[indexToShow].show();
+			item.show = true;
+			insertAtTop(item.id);
+			item.style.opacity = 1;
+			item.style.filter = 'alpha(opacity = 100)';	
+			
+			graphsShownRows[indexToShow] = graphsShown.insertRow(graphsShown.rows.length)
+			graphsShownCells[indexToShow] = graphsShownRows[indexToShow].insertCell(0);
+			graphsShownCells[indexToShow].innerHTML = controlTableCells[indexToShow].innerHTML;
+			graphsShownCells[indexToShow].onclick = 
+						(function(){							
+							hideGraph(indexToShow,controlTableCells[indexToShow]); 		
+						})
+			graphsShownCells[indexToShow].onmouseover = function(){this.style.cursor = 'pointer'}
+			
 }
 function insertAtTop(indexToPlace){
 	graphs[indexToPlace].insertBefore(graphs[0]);
@@ -177,29 +203,20 @@ function toggleDiv(divid){
 }
 function controlClick(a){
 			if (a.firstClick == false){
-				graph(data[a.id],a.id);
-				a.firstClick=true;
-				a.show = true;
-				a.style.opacity = 1;
-				a.style.filter = 'alpha(opacity = 100)';			
-				}
+				graph(data[a.id],a.id,a);
+			}
 			else{
 				if (a.show == false){
-				showGraph(a.id);
-				a.show = true;
-				insertAtTop(a.id);
-				a.style.opacity = 1;
-				a.style.filter = 'alpha(opacity = 100)';	
+					showGraph(a.id, a);
 				}
 				else{
-				hideGraph(a.id);
-				a.show=false;
-				a.style.opacity = 0.5;
-				a.style.filter = 'alpha(opacity = 50)';	
+					hideGraph(a.id,a);	
 				}
 			}
 }
+function shownGraphsItemClick(a){
 
+}
 //******************************************************************************************************
 //					END FUNCTION DECLARATIONS
 //******************************************************************************************************
